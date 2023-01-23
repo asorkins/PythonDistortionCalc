@@ -12,7 +12,7 @@ debug = True
 via_dia = 0
 cnt_vias_in_row = 0 
 
-def regen_image(minArea=15000):
+def regen_image(minArea=15000, maxArea=25000):
     # Find contours in the image
     contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     areas =[]
@@ -25,7 +25,7 @@ def regen_image(minArea=15000):
         area = cv2.contourArea(cnt)
         
 # Check if the contour has a round shape
-        if area > minArea:
+        if ((area > minArea) & (area < maxArea)):
             areas.append(area)
 # Draw the contour on the image
             cv2.drawContours(img, [cnt], 0, (0, 255, 0), 12)
@@ -43,6 +43,7 @@ def regen_image(minArea=15000):
     if debug:
         show_image(img,1024*4)
         print(via_dia)
+    return df
 
 def find_circ(minArea):
     global via_dia, thresh, img
@@ -55,13 +56,17 @@ def find_circ(minArea):
 # Threshold the image to convert it to binary
     ret, thresh = cv2.threshold(gray_image, 127, 255, cv2.THRESH_BINARY)
 #r Apply Gaussian Blur Filter
-    thresh = cv2.GaussianBlur(thresh, (5, 5), 0)
+    #thresh = cv2.GaussianBlur(thresh, (15, 15), 0)
+
 # Find contours in the image
-    contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    # contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     areas =[]
     cx =[]
     cy = []
     df = pd.DataFrame()
+
+    disp_image = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
 # Iterate through the contours
     for cnt in contours:
 # Find the area of the contour
@@ -71,7 +76,7 @@ def find_circ(minArea):
         if area > minArea:
             areas.append(area)
 # Draw the contour on the image
-            cv2.drawContours(img, [cnt], 0, (0, 255, 0), 12)
+            cv2.drawContours(disp_image, [cnt], 0, (255, 0, 0), 2)
             M = cv2.moments(cnt)
             #print( M )
             cx.append(int(M['m10']/M['m00']))
@@ -85,6 +90,7 @@ def find_circ(minArea):
     via_dia = 2*np.sqrt(avrg_dia/np.pi)
     if debug:
         show_image(img,1024*4)
+        show_image(disp_image,1024*4)
         print(via_dia)
 
     return df
@@ -153,6 +159,7 @@ def dist_calc(df):
 ##########################  Plot Distortion for each vias row ##################
 def plot_distortions(list_of_rows):
     i=0
+    fig = plt.figure(figsize=(12, 6))
     for df in list_of_rows:
         if len(df) == cnt_vias_in_row:
             #--- Calculate and add distortion series
@@ -175,6 +182,7 @@ def plot_distortions(list_of_rows):
     plt.setp(correctln, color='g', linewidth=2.5)
  
     #--- Prepare Plot
+    
     plt.xlabel('X Coord [px]')
     plt.ylabel('Distortion [px]')
     plt.title('Distortion Chart')
@@ -187,6 +195,7 @@ def plot_distortions(list_of_rows):
 def main():
     global cnt_vias_in_row
     df2 = find_circ(15000)
+    #return
     pd.set_option('display.max_rows', 500)
     rows_list, rows_vias_cnt = data_process(df2)
     cnt_vias_in_row = max(rows_vias_cnt, key=rows_vias_cnt.get)
