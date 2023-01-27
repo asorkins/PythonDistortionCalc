@@ -9,6 +9,7 @@ import math
 import time
 import pandas as pd
 import numpy as np
+from DistortionCalc import Distortion
 
 customtkinter.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -20,8 +21,9 @@ maxgray = 255
 debug = True
 df = pd.DataFrame()
 
-class App(customtkinter.CTk):
+class App(customtkinter.CTk, Distortion):
 
+    mydist = Distortion()
 
     def __init__(self):
         super().__init__()
@@ -65,7 +67,7 @@ class App(customtkinter.CTk):
         self.btn_DetectViaas.grid(row=0,column=1, padx=10, pady=(100, 0), sticky='n')
         self.btn_Calculate = customtkinter.CTkButton(master=self, text="Calculate", command=self.calculate, state='disabled')
         self.btn_Calculate.grid(row=0,column=1, padx=10, pady=(160, 0) , sticky='n')
-        self.btn_Submit = customtkinter.CTkButton(master=self, text="Submit", command=self.submit, state='disabled')
+        self.btn_Submit = customtkinter.CTkButton(master=self, text="Submit", command=self.submit, state='normal')
         self.btn_Submit.grid(row=0,column=1, padx=10, pady=(220, 0) , sticky='n')        
 
  # from web Example create checkbox and switch frame
@@ -92,7 +94,9 @@ class App(customtkinter.CTk):
         poly_args = test1.plot_distortions(rows_list)        
 
     def submit(self):
-        pass
+        # Use External Class function
+        mymin,mymean,mymax = self.mydist.find_min_max_size()
+        print(mymin, mymean, mymax)
 
     def detect_vias(self):
         global df

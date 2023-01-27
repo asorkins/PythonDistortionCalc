@@ -146,7 +146,7 @@ def df_plot(df, plotType='scatter'):
 def data_process(df):
     df_list = []
     list_df_len = []
-    row_end_ind = []
+    row_end_indexes = []
 #--- Sort the DF
     df.sort_values(['Y','X'],ascending = [False,True],ignore_index=True,inplace=True)
 #--- Find Delta Y for adjacent vias    
@@ -154,18 +154,18 @@ def data_process(df):
     df['yDelta'] = yDelta
 #--- Find end of row and collect its index into array 'ii' and then move to list row_end_ind
     yDelta = np.where(yDelta < -(via_dia), 10101, yDelta)
-    ii = np.where(yDelta == 10101)[0]
-    row_end_ind = ii.tolist()
+    end_index = np.where(yDelta == 10101)[0]
+    row_end_indexes = end_index.tolist()
 #--- Add the very last index
-    row_end_ind.append(len(df))
+    row_end_indexes.append(len(df))
     if debug:
-        print(row_end_ind)
+        print(row_end_indexes)
         #return
         pass
 #--- Generate separate DF for each row using revious index array 
 #       and add them into df_list and return    
     previ_index=0
-    for i in row_end_ind:
+    for i in row_end_indexes:
         new_df = df[previ_index:i].copy()
         previ_index = i
         tempdf = new_df.sort_values('X', ascending = True, ignore_index=True)
