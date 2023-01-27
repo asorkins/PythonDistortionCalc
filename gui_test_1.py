@@ -18,7 +18,7 @@ minsize = 0
 maxsize = 100
 mingray = 127
 maxgray = 255
-debug = True
+debug = False
 df = pd.DataFrame()
 
 class App(customtkinter.CTk, Distortion):
@@ -84,7 +84,7 @@ class App(customtkinter.CTk, Distortion):
 #########################             Control
     def calculate(self):
         #rows_list = []    
-        rows_list, rows_vias_cnt = test1.data_process(df)
+        rows_list, rows_vias_cnt = self.mydist.data_process(df)
         cnt_vias_in_row = max(rows_vias_cnt.keys())
     #--- Check if there is different vias count in the rows and choose the largest vias count
         if len(rows_vias_cnt)>1:
@@ -104,13 +104,14 @@ class App(customtkinter.CTk, Distortion):
         minarea = math.pi * dia * dia / 4
         dia = self.slider_dia_max.get()
         maxarea = math.pi * dia * dia / 4
-        df = test1.regen_image(minarea, maxarea)
+        df, img = self.mydist.regen_image(minarea, maxarea)
+        self.mydist.show_image(img,2048)
         self.btn_Calculate.configure(state='normal')
         if (debug):
             print(df)
 
     def load_image(self): 
-        mymin,mymean,mymax = test1.find_min_max_size()
+        mymin,mymean,mymax = self.mydist.find_min_max_size()
         if((mymin!=0) & (mymax!=0)):
             minsize = math.ceil(math.sqrt(4*mymin/math.pi))
             minsize = minsize*0.9 # reduce 10%

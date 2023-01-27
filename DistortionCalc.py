@@ -89,3 +89,40 @@ class Distortion:
         #     show_image(disp_image,1024*4)
         #     print(via_dia)
         return df, disp_image
+
+    def data_process(self,df):
+        df_list = []
+        list_df_len = []
+        row_end_indexes = []
+    #--- Sort the DF
+        df.sort_values(['Y','X'],ascending = [False,True],ignore_index=True,inplace=True)
+    #--- Find Delta Y for adjacent vias    
+        yDelta = df['Y'] - df['Y'].shift(1)
+        df['yDelta'] = yDelta
+    #--- Find end of row and collect its index into array 'ii' and then move to list row_end_ind
+        yDelta = np.where(yDelta < -(Distortion.via_dia), 10101, yDelta)
+        end_index = np.where(yDelta == 10101)[0]
+        row_end_indexes = end_index.tolist()
+    #--- Add the very last index
+        row_end_indexes.append(len(df))
+        # if debug:
+        #     print(row_end_indexes)
+        #     #return
+        #     pass
+    #--- Generate separate DF for each row using revious index array 
+    #       and add them into df_list and return    
+        previ_index=0
+        for i in row_end_indexes:
+            new_df = df[previ_index:i].copy()
+            previ_index = i
+            tempdf = new_df.sort_values('X', ascending = True, ignore_index=True)
+            df_list.append(tempdf[tempdf.columns[0:3]])
+            list_df_len.append(len(tempdf))
+    #--- Check lenghts of each row
+        row_vias_count = {i:list_df_len.count(i) for i in list_df_len}
+        # if debug:
+        #     pass
+        #     print(row_vias_count)
+        #     print(row_vias_count.keys())
+        #     #print(df_list[(len(df_list)-1)])
+        return df_list, row_vias_count
