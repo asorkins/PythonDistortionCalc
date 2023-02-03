@@ -231,7 +231,7 @@ def main():
     global cnt_vias_in_row
     mymin,mymean,mymax = find_min_max_size()
     print(str(mymin) + " ; " + str(mymean) + " ; " + str(mymax))
-    df2 = regen_image(mymin,mymax)
+    df2 = regen_image(mymax*0.8,mymax)
     print(df2)
     # return
     # df2 = find_circ(15000)

@@ -38,8 +38,13 @@ class App(customtkinter.CTk):
         #                                        size=(self.winfo_width(), 240))
         # self.bg_image_label = customtkinter.CTkLabel(self,text="", image=self.bg_image)
         # self.bg_image_label.grid(row=0, column=0)
-
-        self.label = customtkinter.CTkLabel(self, text="Via Dia")
+        my_image = customtkinter.CTkImage(light_image=Image.open('AI_icon.png'),
+                                        dark_image=Image.open('AI_icon.png'),
+                                        size=(30, 30))
+        img_loading = customtkinter.CTkImage(light_image=Image.open('loading.gif'),
+                                        dark_image=Image.open('loading.gif'),
+                                        size=(100, 100))                                        
+        self.label = customtkinter.CTkLabel(self, text="Via Dia", image=img_loading)
         self.label.place(relx=0.25, rely=0.5, anchor=tkinter.CENTER)
         self.frame_1 = customtkinter.CTkFrame(self,
                                width=200,
@@ -47,9 +52,7 @@ class App(customtkinter.CTk):
                                corner_radius=5, border_width=2,border_color=['#bfb597','#bfb597'])
         self.frame_1.pack(fill="both", expand=False )
  
-        my_image = customtkinter.CTkImage(light_image=Image.open('AI_icon.png'),
-                                        dark_image=Image.open('AI_icon.png'),
-                                        size=(30, 30))
+
 
         button = customtkinter.CTkButton(self, text="Open Image" , image=my_image , command=button_function)
         button.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)

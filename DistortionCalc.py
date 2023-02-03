@@ -12,16 +12,18 @@ class Distortion:
     # Class Variables:
     threshImg = None
     via_dia = 0
-
+    cnt_vias_in_row = 0
     # Constructor
 
     # Instance Methods
     #region Find Min Max Areas
-    def find_min_max_size(self, graymin=127, graymax=255):
+    def find_min_max_size(self,file_path="", graymin=127, graymax=255):
     #global via_dia, thresh, img
-        file_path = filedialog.askopenfilename()
+        
         if file_path=="":
-            return
+            file_path = filedialog.askopenfilename()
+        if file_path=="":
+            return    
         img = cv2.imread(file_path)
     # Convert the image to grayscale
         gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -56,6 +58,12 @@ class Distortion:
         im_pil.show()
 
     def regen_image(self,minArea=15000, maxArea=25000):
+        """Generate Image
+
+        Args:
+            minArea (int, optional): Min vias area . Defaults to 15000.
+            maxArea (int, optional): Max via area. Defaults to 25000.
+        """
         # global via_dia, thresh, img
         # Find contours in the image
         contours, _ = cv2.findContours(Distortion.threshImg, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -120,9 +128,53 @@ class Distortion:
             list_df_len.append(len(tempdf))
     #--- Check lenghts of each row
         row_vias_count = {i:list_df_len.count(i) for i in list_df_len}
-        # if debug:
-        #     pass
-        #     print(row_vias_count)
-        #     print(row_vias_count.keys())
-        #     #print(df_list[(len(df_list)-1)])
+    # -- Assign max via counts to the via count in row
+        Distortion.cnt_vias_in_row = max(row_vias_count.keys())
         return df_list, row_vias_count
+
+    ######################### Distortion Calculation  ################################
+    def dist_calc(self,df):
+        new_df = pd.DataFrame()
+        X_Diff = df['X'] - df['X'].shift(1)
+        avrg = X_Diff.mean()
+        rowStart = df['X'][0]
+        df['ind'] = df.index
+        dist = df['X'] - avrg*df['ind'] - rowStart
+        new_df['X'] = df['X']
+        new_df['Dist'] = dist
+        return new_df
+    ##########################  Plot Distortion for each vias row ##################
+    def plot_distortions(self,list_of_rows):
+        i=0
+        fig = plt.figure(figsize=(12, 6))
+        for df in list_of_rows:
+            if len(df) == Distortion.cnt_vias_in_row:
+                #--- Calculate and add distortion series
+                dist_df = self.dist_calc(df)
+                plt.plot(dist_df['X'], dist_df['Dist'], label=f'row-{i}')
+                i+=1
+        x= dist_df['X']
+        y= dist_df['Dist']
+        #--- Add TrendLine and calculate coefficinet
+        #calculate equation for trendline
+        z = np.polyfit(x, y, 6)
+        p = np.poly1d(z)
+        c, stats = P.polyfit(x,y,6,full=True)
+        #add trendline to plot
+        trdln = plt.plot(x, p(x), 'b--', label='Trendline')
+        plt.setp(trdln, color='b', linewidth=2.5,)
+        # Subtract trendline from last dist row
+        corrected_dist = y - p(x)
+        correctln = plt.plot(x, corrected_dist, label='Corrected')
+        plt.setp(correctln, color='g', linewidth=2.5)
+    
+        #--- Prepare Plot
+        
+        plt.xlabel('X Coord [px]')
+        plt.ylabel('Distortion [px]')
+        plt.title('Distortion Chart')
+        # Add a note
+        plt.figtext(0.8, 0.9, str(c), ha="center", fontsize=7, bbox={"facecolor":"orange", "alpha":0.5, "pad":5})
+        plt.legend()
+        plt.show()
+        return c
