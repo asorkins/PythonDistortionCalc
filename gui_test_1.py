@@ -15,7 +15,7 @@ from tkinter import filedialog
 import pymsgbox
 
 customtkinter.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
-customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
+customtkinter.set_default_color_theme("dark-blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
 minsize = 0
 maxsize = 100
@@ -25,6 +25,7 @@ debug = True
 df = pd.DataFrame()
 busy_flag = True
 file_path = ''
+poly_args = []
 
 class App(customtkinter.CTk, Distortion):
 
@@ -36,14 +37,27 @@ class App(customtkinter.CTk, Distortion):
         # configure window
         self.title("Distortion Calculator")
         self.geometry(f"{480}x{300}")
+        ico = Image.open('calc_icon_1.png')
+        photo = ImageTk.PhotoImage(ico)
+        self.wm_iconphoto(False, photo)
+        # Add image file
+        bg_img = Image.open('AI_icon.png',)
 
+        bg = ImageTk.PhotoImage(bg_img)
+        
+        # Show image using label
+ 
         # configure grid layout (4x4)
         self.grid_columnconfigure(2, weight=1)
         #self.grid_columnconfigure((2, 3), weight=0)
         self.grid_rowconfigure((0,1), weight=1)
 
 #########################             Layout
+        # self.label1 = customtkinter.CTkLabel(self, image = bg)
+        # self.label1.bind("<Configure>", self.resizeimage)
+        # self.label1.grid(row=0,column=1, sticky='snwe')
 
+        
         self.slider_frame = customtkinter.CTkFrame(self , border_width=2, border_color=['#86878a','#86878a'])
         self.slider_frame.grid(row=0, column=0, padx=(20, 20), pady=(20, 20), sticky="new")
         # Labels
@@ -91,6 +105,11 @@ class App(customtkinter.CTk, Distortion):
         # self.switch_2.grid(row=4, column=0, pady=(10, 20), padx=20, sticky="n")
 
 #########################             Control
+    def resizeimage(self,event):
+        image = self.image_copy.resize((self.master.winfo_width(),self.master.winfo_height()))
+        self.image1 = ImageTk.PhotoImage(image)
+        self.label.config(image = self.image1)
+
     def background_img_loading(self):
         global busy_flag
         mymin,mymean,mymax = self.mydist.find_min_max_size(file_path)
@@ -135,7 +154,7 @@ class App(customtkinter.CTk, Distortion):
             self.toggle_element_state(self.btn_DetectViaas,True)              
   
     def calculate(self):
-        #rows_list = []    
+        global poly_args
         rows_list, rows_vias_cnt = self.mydist.data_process(df)
         cnt_vias_in_row = max(rows_vias_cnt.keys())
     #--- Check if there is different vias count in the rows and choose the largest vias count
@@ -144,14 +163,13 @@ class App(customtkinter.CTk, Distortion):
             pymsgbox.alert(f'There are rows with diferent vias counts! \n vias_num:rows_count {rows_vias_cnt}' +
             '\n Only rows with largest vias count will be selected', 'Title')
         poly_args = self.mydist.plot_distortions(rows_list)    
-        print(poly_args)
         self.toggle_element_state(self.btn_Submit,True)
             
 
     def submit(self):
-        # Use External Class function
+        print(poly_args)
         pass
-        self.toggle_element_state(self.btn_LoadImage)
+        
         
 
     def toggle_element_state(self, element, IsEnabled=True):
@@ -181,35 +199,35 @@ class App(customtkinter.CTk, Distortion):
         self.lblProgress.configure(text='Wait as image is loading ... ')
         thread = threading.Thread(target=self.background_img_loading)
         thread.start()       
-        print('Thread Start') 
-        mymin,mymean,mymax = 0, 0, 0
-        # self.show_waiting()
-        # thread1 = threading.Thread(target=self.show_waiting)
-        # thread1.start()   
-        # time.sleep(1)          
-        # thread.join()  
-        print('Thread Joined') 
+        # print('Thread Start') 
+        # mymin,mymean,mymax = 0, 0, 0
+        # # self.show_waiting()
+        # # thread1 = threading.Thread(target=self.show_waiting)
+        # # thread1.start()   
+        # # time.sleep(1)          
+        # # thread.join()  
+        # print('Thread Joined') 
 
-        # mymin,mymean,mymax = self.mydist.find_min_max_size()
-        busy_flag = False
-        if((mymin!=0) & (mymax!=0)):
-            minsize = math.ceil(math.sqrt(4*mymin/math.pi))
-            minsize = minsize*0.9 # reduce 10%
-            maxsize = math.ceil(math.sqrt(4*mymax/math.pi))
-            maxsize = maxsize*1.1 # increase 10%
-            avgsize = (minsize + int(maxsize*0.1))/2
-            self.slider_dia_min.configure(from_=minsize)
-            self.slider_dia_min.configure(to=maxsize)
-            self.slider_dia_min.set(avgsize)
-            self.lblMinValue.configure(text=int(self.slider_dia_min.get()))
-            self.slider_dia_max.configure(from_=minsize)
-            self.slider_dia_max.configure(to=maxsize)
-            self.slider_dia_max.set(maxsize)
-            self.lblMaxValue.configure(text=int(self.slider_dia_max.get()))  
-            self.SliderLabel.configure(text='-->')      
-        # Activate UI elements
-            self.chkSizeLimit.configure(state='normal')
-            self.btn_DetectViaas.configure(state='normal')
+        # # mymin,mymean,mymax = self.mydist.find_min_max_size()
+        # busy_flag = False
+        # if((mymin!=0) & (mymax!=0)):
+        #     minsize = math.ceil(math.sqrt(4*mymin/math.pi))
+        #     minsize = minsize*0.9 # reduce 10%
+        #     maxsize = math.ceil(math.sqrt(4*mymax/math.pi))
+        #     maxsize = maxsize*1.1 # increase 10%
+        #     avgsize = (minsize + int(maxsize*0.1))/2
+        #     self.slider_dia_min.configure(from_=minsize)
+        #     self.slider_dia_min.configure(to=maxsize)
+        #     self.slider_dia_min.set(avgsize)
+        #     self.lblMinValue.configure(text=int(self.slider_dia_min.get()))
+        #     self.slider_dia_max.configure(from_=minsize)
+        #     self.slider_dia_max.configure(to=maxsize)
+        #     self.slider_dia_max.set(maxsize)
+        #     self.lblMaxValue.configure(text=int(self.slider_dia_max.get()))  
+        #     self.SliderLabel.configure(text='-->')      
+        # # Activate UI elements
+        #     self.chkSizeLimit.configure(state='normal')
+        #     self.btn_DetectViaas.configure(state='normal')
 
     def slider_min_event(self, slidervalue):
         self.lblMinValue.configure(text=int(slidervalue))
